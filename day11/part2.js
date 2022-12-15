@@ -54,35 +54,32 @@ const parsedMonkeys = monkeys.map((monkeyLines, index) => {
   }, {});
 });
 
-const rounds = 20;
+const rounds = 10000;
 
 let inspectedItemsCounters = parsedMonkeys.reduce((acc, current, index) => {
   acc[index] = 0;
   return acc;
 }, {});
 
+let mod = parsedMonkeys.reduce((acc, current) => acc * current.test, 1);
+
 for (let round = 1; round <= rounds; round++) {
   for (let i = 0; i < parsedMonkeys.length; i++) {
     const monkey = parsedMonkeys[i];
     const monkeyItemsLength = monkey.items.length;
     for (let j = 0; j < monkeyItemsLength; j++) {
-      const item = monkey.items[0];
+      const item = monkey.items[0] % mod;
       inspectedItemsCounters[i]++;
       const worryLevel = monkey.operation(item);
-      const newWorryLevel = Math.floor(worryLevel / 3);
+      const newWorryLevel = worryLevel;
       const targetMonkey = newWorryLevel % monkey.test === 0 ? monkey.testTrue : monkey.testFalse;
       monkey.items.shift();
       parsedMonkeys[targetMonkey].items.push(newWorryLevel);
     }
   }
-  if ([1, 20, 1000, 2000].includes(round)) {
-    console.log(inspectedItemsCounters);
-  }
 }
 
-// const [activeMonkey1, activeMonkey2, activeMonkey3, activeMonkey4] = Object.values(inspectedItemsCounters).sort((a, b) => b - a);
+const [activeMonkey1, activeMonkey2] = Object.values(inspectedItemsCounters).sort((a, b) => b - a);
 
-// console.log(activeMonkey1, activeMonkey2, activeMonkey3, activeMonkey4);
-
-// const result = activeMonkey1 * activeMonkey2;
-// console.log(result);
+const result = activeMonkey1 * activeMonkey2;
+console.log(result);
