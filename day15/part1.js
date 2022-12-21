@@ -23,52 +23,52 @@ for (let i = 0; i < sensorPoints.length; i++) {
   cacheSensorPoints[`${element.x},${element.y}`] = true;
 }
 
+const relevantNumber = 2000000;
 let canNotBe = [];
 data.forEach((row, index) => {
-  console.log('---sensor---', index + 1);
   const { x: xs, y: ys } = row.s;
   const { x: xb, y: yb } = row.b;
-  // TODO remove
-  // if (xs === 10 && ys === 20 && xb === 10 && yb === 16) {
-    let a = xb;
-    let b = yb;
-    while (a !== xs) {
-      if (xb < xs) {
-        a++;
-      }
-      else if (xb > xs) {
-        a--;
-      } else {
-        a = xs;
-      }
 
-      if (yb > ys) {
-        b++;
-      }
-      if (yb < ys) {
-        b--;
-      }
+  let a = xb;
+  let b = yb;
+  while (a !== xs) {
+    if (xb < xs) {
+      a++;
     }
-
-    let startY;
-    let endY;
-    if (ys > b) {
-      startY = b;
-      endY = (2 * ys) - b;  
+    else if (xb > xs) {
+      a--;
     } else {
-      startY = (2 * ys) - b;
-      endY = b;  
+      a = xs;
     }
-    // console.log('ys ', ys);
-    // console.log('startY ', startY);
-    // console.log('endY ', endY);
-    let startX = xs;
-    let endX = xs;
+
+    if (yb > ys) {
+      b++;
+    }
+    if (yb < ys) {
+      b--;
+    }
+  }
+
+  let startY;
+  let endY;
+  if (ys > b) {
+    startY = b;
+    endY = (2 * ys) - b;  
+  } else {
+    startY = (2 * ys) - b;
+    endY = b;  
+  }
+
+  let startX = xs;
+  let endX = xs;
+  if (startY <= relevantNumber && endY >= relevantNumber) {
     for (let i = startY; i <= endY; i++) {
-      for (let j = startX; j <= endX; j++) {
-        if (!(xb === j && yb === i) && !cacheSensorPoints[`${j},${i}`] && !cacheCanNotBe[`${j},${i}`]) {
-          cacheCanNotBe[`${j},${i}`] = true;
-          canNotBe.push({ x: j, y: i });
+      if (i === relevantNumber) {
+        for (let j = startX; j <= endX; j++) {
+          if (!(xb === j && yb === i) && !cacheSensorPoints[`${j},${i}`] && !cacheCanNotBe[`${j},${i}`]) {
+            cacheCanNotBe[`${j},${i}`] = true;
+            canNotBe.push({ x: j, y: i });
+          }
         }
       }
       if (i < ys) {
@@ -79,13 +79,8 @@ data.forEach((row, index) => {
         endX--;
       }
     }
-  // }
+  }
 });
 
-// console.log(data);
-// console.log();
-// console.log(canNotBe.length);
-
-const result = canNotBe.filter(p => p.y === 2000000);
-// console.log(result);
+const result = canNotBe.filter(p => p.y === relevantNumber);
 console.log(result.length);
