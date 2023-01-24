@@ -66,10 +66,8 @@ for (let currentRock = 0; currentRock < 2022; currentRock++) {
           }
 
           for (const keyOccupiedByCurrentRock of keysOccupiedByCurrentRock) {
-            const [row, col] = keyOccupiedByCurrentRock.split(',');
-            const rowN = Number(row);
-            const colN = Number(col);
-            grid[`${rowN},${colN + 1}`] = 1;
+            const [row, col] = keyOccupiedByCurrentRock.split(',').map(Number);
+            grid[`${row},${col + 1}`] = 1;
           }
         }
       } else {
