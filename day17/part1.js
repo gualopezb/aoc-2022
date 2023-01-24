@@ -1,10 +1,9 @@
 const fs = require('fs');
-const [input] = fs
+const [jetPatterns] = fs
   .readFileSync('input.txt', 'utf8')
   .split('\n')
-  .filter(Boolean);
-
-// console.log(input.split(''));
+  .filter(Boolean)
+  .map(s => s.split(''));
 
 const rocks = [
   [[1, 1, 1, 1]],
@@ -15,52 +14,121 @@ const rocks = [
 ];
 
 let tallest = 0;
-let x = 2;
-let y = tallest + 3;
-let currentShape = rocks[1];
+let rocksCounter = 0;
+let jetPatternsCounter = 0;
+let grid = {};
 
-const obj = {};
+for (let currentRock = 0; currentRock < 2022; currentRock++) {
+  let allMovementsCounter = 0;
+  const rock = rocks[rocksCounter % rocks.length];
 
-// rock initial position
-for (let i = currentShape.length - 1; i >= 0; i--) {
-  x = 2;
-  for (let j = 0; j < currentShape[i].length; j++) {
-    console.log(x, y, 'value: ', currentShape[i][j]);
-    obj[`${x},${y}`] = currentShape[i][j];
-    x++;
-  }
-  y++;
-}
+  let rockDidComeToRest = false;
 
-console.log('before', obj);
+  let gr = tallest + 3;
 
-// rock movements
-let cx = 2;
-let cy = 3;
-// can move to the left?
-let canMove = true;
-const limit = (cy + currentShape.length) - 1;
-if (cx - 1 >= 0) {
-  for (let i = cy; i <= limit; i++) {
-    const element = obj[`${cx},${i}`];
-    const previousElement = obj[`${cx - 1},${i}`];
-    if (element === 1 && previousElement === -1) {
-      console.log('cannot move');
-      canMove = false;
-      break;
+  // initial position of the rock in the grid
+  for (let i = rock.length - 1; i >= 0; i--) {
+    let gc = 2;
+    for (let j = 0; j < rock[i].length; j++) {
+      if (rock[i][j]) {
+        grid[`${gr},${gc}`] = 1;
+      }
+      gc++;
     }
+    gr++;
   }
-} else {
-  console.log('edge reached');
+
+  while (!rockDidComeToRest) {
+    let keysOccupiedByCurrentRock = Object.keys(grid).filter(key => grid[key] === 1);
+    const currentRockKeys = Object.keys(grid).filter(key => grid[key] === 1);
+    const currentRockKeyRows = currentRockKeys.map(key => key.split(',')[0]);
+    const currentRockKeyCols = currentRockKeys.map(key => key.split(',')[1]);
+    const minRow = Math.min(...currentRockKeyRows);
+    const maxRow = Math.max(...currentRockKeyRows);
+    const minCol = Math.min(...currentRockKeyCols);
+    const maxCol = Math.max(...currentRockKeyCols);
+
+    if (allMovementsCounter % 2 === 0) {
+      const jetPattern = jetPatterns[jetPatternsCounter % jetPatterns.length];
+
+      if (jetPattern === '>') {
+        let canNotMoveRight = false;
+        for (let r = minRow; r <= maxRow; r++) {
+          for (let c = minCol; c <= maxCol; c++) {
+            if (c === 6 || grid[`${r},${c}`] === 1 && grid[`${r},${c + 1}`] === true) {
+              canNotMoveRight = true;
+            }
+          }
+        }
+        if (!canNotMoveRight) {
+          for (const keyOccupiedByCurrentRock of keysOccupiedByCurrentRock) {
+            delete grid[keyOccupiedByCurrentRock];
+          }
+
+          for (const keyOccupiedByCurrentRock of keysOccupiedByCurrentRock) {
+            const [row, col] = keyOccupiedByCurrentRock.split(',');
+            const rowN = Number(row);
+            const colN = Number(col);
+            grid[`${rowN},${colN + 1}`] = 1;
+          }
+        }
+      } else {
+        let canNotMoveLeft = false;
+        for (let r = minRow; r <= maxRow; r++) {
+          for (let c = minCol; c <= maxCol; c++) {
+            if (c === 0 || grid[`${r},${c}`] === 1 && grid[`${r},${c - 1}`] === true) {
+              canNotMoveLeft = true;
+            }
+          }
+        }
+        if (!canNotMoveLeft) {
+          for (const keyOccupiedByCurrentRock of keysOccupiedByCurrentRock) {
+            delete grid[keyOccupiedByCurrentRock];
+          }
+
+          for (const keyOccupiedByCurrentRock of keysOccupiedByCurrentRock) {
+            const [row, col] = keyOccupiedByCurrentRock.split(',').map(Number);
+            grid[`${row},${col - 1}`] = 1;
+          }
+        }
+      }
+      jetPatternsCounter++;
+    } else {
+      let canNotMoveDown = false;
+      for (let r = minRow; r <= maxRow; r++) {
+        for (let c = minCol; c <= maxCol; c++) {
+          if (r === 0 || grid[`${r},${c}`] === 1 && grid[`${r - 1},${c}`] === true) {
+            canNotMoveDown = true;
+          }
+        }
+      }
+
+      if (canNotMoveDown) rockDidComeToRest = true;
+
+      if (!rockDidComeToRest) {
+        for (const keyOccupiedByCurrentRock of keysOccupiedByCurrentRock) {
+          delete grid[keyOccupiedByCurrentRock];
+        }
+
+        for (const keyOccupiedByCurrentRock of keysOccupiedByCurrentRock) {
+          const [row, col] = keyOccupiedByCurrentRock.split(',').map(Number);
+          grid[`${row - 1},${col}`] = 1;
+        }
+      }
+    }
+    allMovementsCounter++;
+  }
+
+  // make current rock as permanent
+  const keysOccupiedByCurrentRock = Object.keys(grid).filter(key => grid[key] === 1);
+  for (const keyOccupiedByCurrentRock of keysOccupiedByCurrentRock) {
+    grid[keyOccupiedByCurrentRock] = true;
+  }
+
+  rocksCounter++;
+
+  // set new tallest
+  tallest = Math.max(...Object.keys(grid).map(key => Number(key.split(',')[0]))) + 1;
 }
 
-// move to left
-for (let j = cx; j <= cx + currentShape[0].length - 1; j++) {
-  for (let i = cy; i <= limit; i++) {
-    const value = obj[`${j},${i}`];
-    obj[`${j - 1},${i}`] = value;
-    delete obj[`${j},${i}`];
-  }
-}
-cx--;
-console.log('after', obj);
+console.log('tallest', tallest);
